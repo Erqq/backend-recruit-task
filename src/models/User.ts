@@ -8,7 +8,8 @@ export default class User extends Model {
   readonly id!: number;
   username: string;
   name?: string;
-
+  password: string;
+  
   static jsonSchema = {
     type: 'object',
     required: ['username','password'],
@@ -17,6 +18,8 @@ export default class User extends Model {
       id: { type: 'integer' },
       name: { type: 'string', minLength: 1, maxLength: 255 },
       lastname: { type: 'string', minLength: 1, maxLength: 255 },
+      password: { type: 'string', minLength: 1, maxLength: 255 },
+
 
     },
   };
