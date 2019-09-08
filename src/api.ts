@@ -2,6 +2,7 @@ import * as express from 'express';
 import User from './models/User';
 import Todo from './models/Todo';
 import { BadRequestError, NotFoundError } from './Errors';
+import {password} from './accounts'
 
 export default (router: express.Router) => {
   router.get('/users', async (req, res) => {
@@ -25,14 +26,23 @@ export default (router: express.Router) => {
   });
 
   router.post('/user', async (req, res) => {
-    console.log(req.body);
     const newuser= req.body.newUser 
     if (!newuser) throw new  BadRequestError('No Body');
-    
 
-    await User.query().insert(newuser);
-    
-    
-  res.send()
+    await User.query().select("username")
+    .where('username', newuser.username)
+    .then(async uNameList => {
+        if(uNameList.length===0){
+          const hashedPassword = await password.hashPassword(newuser.password)
+          newuser.password= hashedPassword.hash
+          await User.query().insert(newuser);
+         return 
+        }
+
+      throw new  BadRequestError('Username already in use');
+      
+    })
+    res.send('Success: new user added')
+
   });
 };
