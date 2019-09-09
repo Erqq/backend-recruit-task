@@ -2,26 +2,13 @@ import * as express from 'express';
 import User from './models/User';
 import Todo from './models/Todo';
 import { BadRequestError, NotFoundError } from './Errors';
-import {password} from './accounts'
+import {password, jwt} from './accounts'
+import {userNameExists, checkPassword} from './queries'
 
 export default (router: express.Router) => {
 
-  const userNameExists = async username => {
-
-    const exists = await User.query().select("username")
-    .where('username', username)
-    .then(async uNameList => {
-        if(uNameList.length===0){
-          return false
-        }
-      return true
-    })
-    return exists
-  }
-
   router.get('/users', async (req, res) => {
     const users = await User.query();
-
     res.send(users);
   });
 
@@ -41,41 +28,74 @@ export default (router: express.Router) => {
 
   router.post('/user', async (req, res) => {
     const newuser= req.body.newUser 
-    if (!newuser) throw new  BadRequestError('No Body');
+    if (!newuser) throw new  BadRequestError('no user information');
     
     if(await userNameExists(newuser.username)) {
-      throw new  BadRequestError('Username already in use');
+      throw new  BadRequestError('Username is already in use');
     }
     else {
       const hashedPassword = await password.hashPassword(newuser.password)
       newuser.password= hashedPassword.hash
       await User.query().insert(newuser);
+      res.send('Success: new user added')
     }
-   
-  res.send('Success: new user added')
 
   });
 
-  router.post('/userlogin', async (req,res) =>{
-
-    console.log(req.body);
-    if(await userNameExists(req.body.username)){
-        User.query().select("password")
-        .where("username", req.body.username)
-        .first()
-        .then(async asd =>{
-          console.log(await password.comparePassword(req.body.password, asd.password));
-          
-          
-        })
-    }else{
-      throw new  BadRequestError('Username or password is wrong');
+  router.post('/login', async (req,res) =>{
+    const user = req.body
+    if(await userNameExists(user.username)){
+      if( await checkPassword(user.username,user.password)){
+        res.send({token: jwt.issueToken(user.username)})
+      }else{
+        throw new BadRequestError('Wrong username or password');
+      }
+      
+    } else {
+      throw new BadRequestError('Wrong username or password');
 
     }
-
-
-    res.send('username or password is wrong')
-
   });
+
+  router.post('/changepassword', async (req,res)=>{
+    let validToken: any
+    try {
+      validToken = jwt.validateToken(req.body.token) 
+    } catch (error) {
+      throw new BadRequestError("invalid token")
+    }
+
+    if (await checkPassword(validToken.sub, req.body.password)){
+      const newPassword =  await password.hashPassword(req.body.newPassword)
+      try {
+        await User.query()
+        .update({username: validToken.sub, password: newPassword.hash})
+        .where("username", validToken.sub)
+      } catch (error) {
+        console.log(error);
+        throw new BadRequestError("something went wrong")
+      }
+
+    } else {
+      throw new BadRequestError("Wrong username or password")
+    }
+    
+    res.send("Password changed successfully")
+    
+  })
+
+  router.post('/forgotpassword', async (req, res)=>{
+    const newPassword =  await password.hashPassword(req.body.newPassword)
+
+    try {
+      await User.query()
+      .update({username: req.body.username, password: newPassword.hash})
+      .where("username", req.body.username)
+    } catch (error) {
+      console.log(error);
+      throw new BadRequestError("something went wrong")
+    }
+    res.send("password changed")
+  })
 
 };
