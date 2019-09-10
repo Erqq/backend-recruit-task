@@ -9,10 +9,10 @@ export default class User extends Model {
   username: string;
   name?: string;
   password: string;
-  
+
   static jsonSchema = {
     type: 'object',
-    required: ['username','password'],
+    required: ['username', 'password'],
 
     properties: {
       id: { type: 'integer' },
