@@ -4,7 +4,9 @@ import * as bodyParser from 'body-parser';
 import * as express from 'express';
 import * as Knex from 'knex';
 import * as morgan from 'morgan';
-import registerApi from './api';
+import registerUsers from './routes/user';
+import registerTodos from './routes/todos';
+import registerAuth from './routes/auth';
 import { Model } from 'objection';
 import { HttpError } from './Errors';
 
@@ -27,7 +29,9 @@ const app = express()
   .set('json spaces', 2);
 
 // Register our REST API.
-registerApi(router);
+registerAuth(router);
+registerTodos(router);
+registerUsers(router);
 
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   if (err) {
