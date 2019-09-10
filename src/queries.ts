@@ -1,5 +1,6 @@
 import User from './models/User';
-import {password} from './accounts'
+import {password ,jwt} from './accounts'
+import { BadRequestError } from './Errors';
 
 
   export const userNameExists = async username => {
@@ -15,7 +16,6 @@ import {password} from './accounts'
     
   }
   
-
   export const checkPassword = async (username, userPassword) => {
    return await User.query().select("password")
     .where("username", username).first()
@@ -28,3 +28,12 @@ import {password} from './accounts'
       
     })
   }
+
+  export const checkToken = async (token:string) => {
+    try {
+      return jwt.validateToken(token) 
+    } catch (error) {
+      throw new BadRequestError("invalid token")
+    }
+  }
+  
