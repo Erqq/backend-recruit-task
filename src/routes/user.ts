@@ -14,8 +14,7 @@ export default (router: express.Router) => {
 
   router.get('/user', async (req, res) => {
     const validUser: any = await checkToken(req.body.token);
-    const user = await User.query().select('username', 'name', 'lastname')
-            .where('id', validUser.id);
+    const user = await User.query().select('username', 'name', 'lastname').where('id', validUser.id);
     res.send(user);
   });
 
