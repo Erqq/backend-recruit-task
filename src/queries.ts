@@ -7,18 +7,16 @@ import { BadRequestError } from './Errors';
  * Checks if the username na is already in the database
  * @param username The username to be checked
  */
-export const userNameExists = async username => {
+export const userNameExists = async (username) => {
 
   return await User.query().select('username')
     .where('username', username)
-    .then(async uNameList => {
-      if (uNameList.length === 0) {
-        return false;
-      }
-      return true;
-    });
+    .then(async (uNameList) => {
 
+      return uNameList.length === 0 ? false : true;
+    });
 };
+
 /**
  * Checks if the password is correct
  * @param username The users username
@@ -27,7 +25,7 @@ export const userNameExists = async username => {
 export const checkPassword = async (username: string, userPassword: string) => {
   return await User.query().select('password')
     .where('username', username).first()
-    .then(async user => {
+    .then(async (user) => {
 
       return await password.comparePassword(userPassword, user.password) ? true : false;
     });

@@ -72,8 +72,8 @@ export default (router: express.Router) => {
     const todolist: any = req.body.todoList;
     const todos: any = req.body.todoList.todos;
 
-    await Todolist.query().insert({ name: todolist.name, userId: user.id }).then(async list => {
-      return await todos.map(async todo => {
+    await Todolist.query().insert({ name: todolist.name, userId: user.id }).then(async (list) => {
+      return await todos.map(async (todo) => {
         return await Todo.query().insert({
           title: todo.title,
           description: `${user.name} remember: ${todo.description}`,
