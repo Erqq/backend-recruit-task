@@ -12,9 +12,26 @@ exports.up = knex => {
         .inTable('users')
         .onDelete('CASCADE');
     })
-    .table(tables.TODO_TABLE, table => {
+    .alterTable('todos', table => {
         table.renameColumn('userId', 'todolistId')
     })
+    .renameTable(tables.TODO_TABLE, 'todos_old')
+    .createTable('todos', table => {
+        table.increments('id').primary();
+        table.string('title').notNullable();
+        table.string('description');
+  
+        table.bigInteger('createdAt').notNullable().defaultTo(knex.fn.now());
+        table.bigInteger('updatedAt').notNullable().defaultTo(knex.fn.now());
+        
+        table
+          .integer('todolistId')
+          .unsigned()
+          .references('id')
+          .inTable('todolist')
+          .onDelete('CASCADE');
+    }).dropTable('todos_old')
+     
     
 
     
@@ -26,5 +43,8 @@ exports.down= knex => {
 
     }) .table(tables.TODO_TABLE, table => {
         table.renameColumn('todolistId', 'userId')
+    }).table(tables.TODOLIST_TABLE, table => {
+        table.dropTableIfExists(tables.TODOLIST_TABLE)
+
     })
 }

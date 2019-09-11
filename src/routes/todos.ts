@@ -10,7 +10,7 @@ export default (router: express.Router) => {
     const user = await checkToken(req.body.token);
     try {
       const list = await Todo.query()
-      .innerJoin('todolist', 'todos.todolistId', 'todolist.userId')
+      .innerJoin('todolist', 'todos.todolistId', 'todolist.id')
       .where('userId', user.id);
       res.send(list);
 
@@ -26,8 +26,8 @@ export default (router: express.Router) => {
     const user: any = await checkToken(req.body.token);
 
     const todo = await Todo.query()
-      .innerJoin('todolist', 'todos.todolistId', 'todolist.userId')
-      .where('userId', user.id).where('todos.id', id).first();
+      .innerJoin('todolist', 'todos.todolistId', 'todolist.id').
+      where('userId', user.id).where('todos.id', id).first();
     if (!todo) throw new NotFoundError('No such Todo!');
     res.send(todo);
   });
@@ -35,13 +35,13 @@ export default (router: express.Router) => {
   router.post('/todo', async (req, res) => {
     const user: any = await checkToken(req.body.token);
     const todo = req.body.todo;
-    const list: any = await Todolist.query().where('userId', user.id).first();
+    const listId = req.body.todolistId;
 
     try {
       await Todo.query().insert({
         title: todo.title,
         description: `${user.name} remember: ${todo.description}`,
-        todolistId: list.id,
+        todolistId: listId,
       });
     } catch (error) {
       console.log(error);
@@ -60,19 +60,27 @@ export default (router: express.Router) => {
 
   router.post('/todolist', async (req, res) => {
     const user: any = await checkToken(req.body.token);
-    const todo = req.body.todo;
+    const todolist:any = req.body.todoList;
+    const todos: any = req.body.todoList.todos;
     const list: any = await Todolist.query().where('userId', user.id).first();
 
     try {
-      await Todo.query().insert({
-        title: todo.title,
-        description: `${user.name} remember: ${todo.description}`,
-        todolistId: list.id,
+      await Todolist.query().insert({ name: todolist.name, userId: user.id }).then(async list => {
+        return todos.map(async todo => {
+          return await Todo.query().insert({
+            title: todo.title,
+            description: `${user.name} remember: ${todo.description}`,
+            todolistId: list.id,
+          }).catch(error => { console.log(error); });
+
+        });
+
       });
     } catch (error) {
       console.log(error);
 
     }
+
     res.send('Todo added successfully');
   });
 
