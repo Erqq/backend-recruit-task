@@ -8,7 +8,7 @@ export default class Todo extends Model {
   title: string;
   description?: string;
 
-  userId?: number;
+  todolistId?: number;
 
   static jsonSchema = {
     type: 'object',
@@ -18,7 +18,7 @@ export default class Todo extends Model {
       id: { type: 'integer' },
       title: { type: 'string', minLength: 1, maxLength: 255 },
       description: { type: 'string', minLength: 1, maxLength: 255 },
-      userId: { type: ['integer', 'null'] },
+      todolistId: { type: ['integer', 'null'] },
     },
   };
 }
